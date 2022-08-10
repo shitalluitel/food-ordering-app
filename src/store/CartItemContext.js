@@ -15,18 +15,39 @@ const cartItemReducer = (state, action) => {
     switch (action.type) {
         case 'ADD_ITEM':
             const updatedTotalAmount = state.totalAmount + action.item.price * action.item.amount
-            const updateItems = state.items.concat(action.item);
+            const existingCartItemIndex = state.items.findIndex(
+                (item) => item.id === action.item.id
+            )
+            const existingCartItem = state.items[existingCartItemIndex]
+            let updatedItem;
+            let updatedItems;
 
-            return {items: updateItems, totalAmount: updatedTotalAmount}
+            if (existingCartItem) {
+                updatedItem = {
+                    ...existingCartItem,
+                    amount: existingCartItem.amount + action.item.amount
+                }
+                updatedItems = [...state.items]
+                updatedItems[existingCartItemIndex] = updatedItem
+            } else {
+                updatedItems = state.items.concat(action.item);
+            }
 
+            return {items: updatedItems, totalAmount: updatedTotalAmount}
         case 'REMOVE_ITEM':
-            const removedItems = state.items.filter( (item) => {
-                return item.id === action.id;
-            })
-            const removedTotalAmount = removedItems.reduce((previousValue, item) => {
-                return previousValue + item.amount * item.price
-            },0)
-            return {items: removedItems, totalAmount: removedTotalAmount}
+            const existingCartItemRemoveIndex = state.items.findIndex(
+                (item) => item.id === action.id
+            )
+            let deductedTotalAmount = state.totalAmount
+            const removedCartItem = state.items[existingCartItemRemoveIndex]
+            let updatedCartItems = [...state.items]
+
+            if (removedCartItem) {
+                updatedCartItems.splice(existingCartItemRemoveIndex, 1)
+                deductedTotalAmount -= removedCartItem.price * removedCartItem.amount
+            }
+
+            return {items: updatedCartItems, totalAmount: deductedTotalAmount}
         default:
             return defaultCartState;
     }
